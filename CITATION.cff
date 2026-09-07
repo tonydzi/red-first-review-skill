@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use red-first-review or mutmatrix in research or software, please cite it as below."
+title: "red-first-review-skill (mutmatrix)"
+type: software
+authors:
+  - family-names: Dziatkovskii
+    given-names: Anton
+    orcid: "https://orcid.org/0000-0001-7408-3054"
+    affiliation: "Palo Alto AI Research Lab"
+repository-code: "https://github.com/tonydzi/red-first-review-skill"
+url: "https://github.com/tonydzi/red-first-review-skill"
+license: MIT
+abstract: >-
+  A stdlib-only Python tool and Claude Code skill for reviewing a pull request
+  by measuring which of the guards it adds would survive being deleted. Each
+  guard is neutralised in turn, the project's own test suite is run, and the
+  mutations nothing notices are reported as the finding. Most of the code is
+  not the mutation loop but the refusals that stop it printing an unsupportable
+  table: a baseline check (a suite already red attributes nothing to the PR), a
+  canary check (a test command that never imports the mutated file makes every
+  kill another test's), a compile check (an unparseable mutant fails every test
+  and looks exactly like perfect coverage), and an UNPROVEN verdict when the
+  canary is skipped. Exit 0 no survivors, 1 survivors, 3 the run measured
+  nothing and must not be quoted. The test suite ships a kill-list and a
+  documented red mode, so the checker is itself shown failing before it is
+  trusted.
