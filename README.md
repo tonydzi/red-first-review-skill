@@ -1,4 +1,58 @@
-# red-first-review
+# red-first-review-skill
+
+A Claude Code skill and a small Python tool that check someone else's pull request by deleting each safety check the PR adds, then seeing whether the tests notice.
+
+**Who it's for:** people who review pull requests and want proof that a fix is really tested.
+**What you get:** a table of which removed guards nothing caught (the real findings), which a review can be built on.
+
+## Quick start
+1. Put the skill where Claude Code can find it: `git clone https://github.com/tonydzi/red-first-review-skill ~/.claude/skills/red-first-review`
+2. Open the project you want to review and ask Claude: "review this PR" or "is this change actually tested?"
+3. Claude runs `mutmatrix.py` on the PR's guards and reports the ones nothing caught.
+
+**Done when:** you see a table with each guard marked `killed` or `SURVIVED`, ending in a line like `2 killed, 0 SURVIVED, 0 invalid.`
+
+> Want an AI agent to do it for you? Paste this to Claude Code / Codex / Cursor:
+> "Read the 'For AI agents' section of https://github.com/tonydzi/red-first-review-skill and set it up for me."
+
+## For AI agents
+
+### Preconditions
+- Python 3.8 or newer. Standard library only. Nothing to `pip install`.
+- For the skill route: Claude Code with a skills folder at `~/.claude/skills/`. For other agents, ask the human where skills live, or just use `mutmatrix.py` on its own.
+- A target repository whose test suite is green and runs from one shell command. Ask the human for that test command and for the source file(s) the PR changes.
+- Ask the human for a clean `git status` in the target repo before any run.
+
+### Install
+```bash
+git clone https://github.com/tonydzi/red-first-review-skill ~/.claude/skills/red-first-review
+```
+Plain tool only: copy the single file `mutmatrix.py` anywhere. On Windows use `python` if `python3` is not found.
+
+### Configure
+No config files. Each run needs these from the human or the PR:
+```bash
+python3 mutmatrix.py --repo . --test "<their test command>" --file <path/to/changed_file.py> --call-identity <guard_function_name>
+```
+Other targeting flags (all in `python3 mutmatrix.py --help`): `--mutant 'LABEL::FILE::FIND::REPLACE'`, `--line 'LABEL::FILE::N'`, `--sep '@@'` when the code contains `::`, `--canary-file`, `--timeout`. Pass `-p no:randomly` inside a pytest command so test order is stable. Follow `SKILL.md` for the full review procedure.
+
+### Verify
+```bash
+python3 mutmatrix.py --help
+python3 _test_mutmatrix.py
+```
+Expected: `--help` exits 0 and prints the usage with `--test`. The self-test exits 0 and ends with `all cases behaved as expected.` (cases C1 to C7 PASS).
+
+### Uninstall / rollback
+Delete `~/.claude/skills/red-first-review`. `mutmatrix.py` restores the files it mutates; if a run was killed, check `git status` in the target repo and look for a leftover `.mutmatrix-backup/` folder (the tool refuses to start while one exists). Restore from it, then remove it.
+
+### Rules for the agent
+- Never run mutmatrix in a repo with uncommitted work.
+- Exit codes: 0 no survivors, 1 survivors found (the finding), 3 nothing measured (do not quote the result), 2 usage, 4 tool crashed.
+- Post reviews with `gh pr review --comment`, not `gh pr comment`. Do not post on someone else's PR without the human's yes.
+- Read the whole changed files, not only the diff (step 0 of `SKILL.md`).
+
+## Details
 
 **A test that has never been shown failing is a claim, not a check.**
 
@@ -131,7 +185,7 @@ The author's reply:
 > PR. All three findings confirmed and fixed, verified the same way you found
 > them (neutering each call site and checking the suite).
 
-— [prasanna8585, 1 Sep 2026](https://github.com/google/adk-python/pull/6957#issuecomment-5489421299)
+— [prasanna8585, 1 Sep 2026](https://github.com/google/adk-python/pull/6957) (comment id 5489421299)
 
 That review was hand-rolled. This repository is that procedure made repeatable, as [SKILL.md](SKILL.md) and [mutmatrix.py](mutmatrix.py).
 
