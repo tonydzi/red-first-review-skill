@@ -10,7 +10,7 @@ A Claude Code skill and a small Python tool that check someone else's pull reque
 2. Open the project you want to review and ask Claude: "review this PR" or "is this change actually tested?"
 3. Claude runs `mutmatrix.py` on the PR's guards and reports the ones nothing caught.
 
-**Done when:** you see a table with each guard marked `killed` or `SURVIVED`, ending in a line like `2 killed, 0 SURVIVED, 0 invalid.`
+**Done when:** you see a table with each guard marked `killed` or `SURVIVED`, ending in a line like `2 killed, 0 SURVIVED, 0 invalid.` A `SURVIVED` row is not an error: it is the finding (a guard the tests never notice). A table cut short by a message about baseline or canary means nothing was measured, so do not trust it.
 
 > Want an AI agent to do it for you? Paste this to Claude Code / Codex / Cursor:
 > "Read the 'For AI agents' section of https://github.com/tonydzi/red-first-review-skill and set it up for me."
@@ -27,7 +27,8 @@ A Claude Code skill and a small Python tool that check someone else's pull reque
 ```bash
 git clone https://github.com/tonydzi/red-first-review-skill ~/.claude/skills/red-first-review
 ```
-Plain tool only: copy the single file `mutmatrix.py` anywhere. On Windows use `python` if `python3` is not found.
+Windows PowerShell does not expand `~` for native commands, so use: `git clone https://github.com/tonydzi/red-first-review-skill "$HOME\.claude\skills\red-first-review"`.
+Plain tool only: copy the single file `mutmatrix.py` anywhere. On Windows `python3` is usually a Microsoft Store stub: type `python` instead of `python3` in every command below.
 
 ### Configure
 No config files. Each run needs these from the human or the PR:
@@ -41,7 +42,7 @@ Other targeting flags (all in `python3 mutmatrix.py --help`): `--mutant 'LABEL::
 python3 mutmatrix.py --help
 python3 _test_mutmatrix.py
 ```
-Expected: `--help` exits 0 and prints the usage with `--test`. The self-test exits 0 and ends with `all cases behaved as expected.` (cases C1 to C7 PASS).
+Expected: `--help` exits 0 and prints the usage with `--test`. The self-test (about 50 seconds on Windows; it plants four deliberate bugs in a copy of the tool and checks each is caught) exits 0 and ends with `all cases behaved as expected.` (cases C1 to C7 PASS). It tests the tool itself, not your target repo; run it from the folder that holds `mutmatrix.py`.
 
 ### Uninstall / rollback
 Delete `~/.claude/skills/red-first-review`. `mutmatrix.py` restores the files it mutates; if a run was killed, check `git status` in the target repo and look for a leftover `.mutmatrix-backup/` folder (the tool refuses to start while one exists). Restore from it, then remove it.
